@@ -10,3 +10,9 @@
     |cffffffff|r
     color(255,255,255,255)
 ```
+
+目前支持以下格式的文件
+
+``` txt
+    "jass","lua","wurst","ini","vjass","zinc"
+```
