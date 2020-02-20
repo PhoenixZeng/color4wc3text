@@ -2,7 +2,7 @@
 	"name": "color4wc3text",
 	"displayName": "color4wc3text",
 	"description": "make wc3 color-prefix colorful",
-	"version": "0.0.3",
+	"version": "0.0.4",
 	"publisher": "PhoenixZeng",
 	"engines": {
 		"vscode": "^1.37.0"
@@ -12,8 +12,8 @@
 	],
 	"icon": "resource/icon.png",
 	"keywords": [
-    	"warcraft"
-  	],
+		"warcraft"
+	],
 	"markdown": "github",
 	"activationEvents": [
 		"onLanguage:lua",
@@ -23,8 +23,7 @@
 		"onLanguage:ini"
 	],
 	"main": "./out/extension.js",
-	"contributes": {
-	},
+	"contributes": {},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
