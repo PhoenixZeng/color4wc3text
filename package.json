@@ -2,7 +2,7 @@
 	"name": "color4wc3text",
 	"displayName": "color4wc3text",
 	"description": "make wc3 color-prefix colorful",
-	"version": "0.0.4",
+	"version": "0.0.5",
 	"publisher": "PhoenixZeng",
 	"engines": {
 		"vscode": "^1.37.0"
@@ -26,8 +26,11 @@
 	"contributes": {
 		"languages": [
 			{
-				"id":"jass",
-				"aliases": ["Jass","jass"],
+				"id": "jass",
+				"aliases": [
+					"Jass",
+					"jass"
+				],
 				"extensions": [
 					".jass",
 					".j",
@@ -37,22 +40,32 @@
 				]
 			},
 			{
-				"id":"wurst",
-				"aliases": ["Wurst","wurst"],
+				"id": "wurst",
+				"aliases": [
+					"Wurst",
+					"wurst"
+				],
 				"extensions": [
 					".wurst"
 				]
 			},
 			{
-				"id":"lua",
-				"aliases": ["Lua","lua"],
+				"id": "lua",
+				"aliases": [
+					"Lua",
+					"lua"
+				],
 				"extensions": [
 					".lua"
 				]
 			},
 			{
-				"id":"lni",
-				"aliases": ["Lni","lni","ini"],
+				"id": "lni",
+				"aliases": [
+					"Lni",
+					"lni",
+					"ini"
+				],
 				"extensions": [
 					".ini"
 				]
