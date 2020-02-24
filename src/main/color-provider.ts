@@ -7,7 +7,7 @@
  * @LastEditTime: 2020-02-21 00:35:48
  */
 import * as vscode from 'vscode';
-import { languages } from './constant';
+
 
 /// 颜色提供
 const convertInt2Hex = (int: number) => {
@@ -42,7 +42,6 @@ class HexDocumentColorProvider implements vscode.DocumentColorProvider {
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
     let colors = new Array<vscode.ColorInformation>();
-    // new RegExp(/\|[cC][\da-fA-F]{8}.+?\|[rR]/, "g")
     let colorReg = new RegExp(/\|[cC][\da-fA-F]{8}/, "g");
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
@@ -124,6 +123,9 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
 
   }
 }
+
+const languages = ["jass","lua","wurst","ini","vjass","zinc"];
+
 languages.forEach(language=>{
   // if (language !== "jass" && language !== "wurst"){
     vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);

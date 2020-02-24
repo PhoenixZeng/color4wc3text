@@ -23,7 +23,42 @@
 		"onLanguage:ini"
 	],
 	"main": "./out/extension.js",
-	"contributes": {},
+	"contributes": {
+		"languages": [
+			{
+				"id":"jass",
+				"aliases": ["Jass","jass"],
+				"extensions": [
+					".jass",
+					".j",
+					".vj",
+					".zinc",
+					".ai"
+				]
+			},
+			{
+				"id":"wurst",
+				"aliases": ["Wurst","wurst"],
+				"extensions": [
+					".wurst"
+				]
+			},
+			{
+				"id":"lua",
+				"aliases": ["Lua","lua"],
+				"extensions": [
+					".lua"
+				]
+			},
+			{
+				"id":"lni",
+				"aliases": ["Lni","lni","ini"],
+				"extensions": [
+					".ini"
+				]
+			}
+		]
+	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",
 		"compile": "tsc -p ./",
