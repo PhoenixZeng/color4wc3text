@@ -4,6 +4,6 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [0.0.6]
 
-- Initial release
+- 没啥变化 瞎鸡儿更新
