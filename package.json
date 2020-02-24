@@ -2,7 +2,7 @@
 	"name": "color4wc3text",
 	"displayName": "color4wc3text",
 	"description": "make wc3 color-prefix colorful",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"publisher": "PhoenixZeng",
 	"engines": {
 		"vscode": "^1.37.0"
