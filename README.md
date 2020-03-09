@@ -14,7 +14,7 @@
 目前支持以下格式的文件
 
 ``` txt
-    "jass","lua","wurst","ini","vjass","zinc"
+    "jass","lua","wurst","ini","vjass","zinc","fdf","json"
 ```
 
 群:692125060

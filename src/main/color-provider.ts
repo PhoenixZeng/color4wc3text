@@ -124,14 +124,12 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
   }
 }
 
-const languages = ["jass","lua","wurst","ini","vjass","zinc"];
+const hexSupportLanguages = ["jass","lua","wurst","ini","vjass","zinc","fdf","json"];
+const colorSupportLanguages = ["lua","vjass","zinc"];
 
-languages.forEach(language=>{
-  // if (language !== "jass" && language !== "wurst"){
-    vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);
-  // }
-  if (language !== "wurst" && language !== "ini")
-  {
-    vscode.languages.registerColorProvider(language, new ColorDocumentColorProvider);
-  }
+hexSupportLanguages.forEach(language=>{
+  vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);
+});
+colorSupportLanguages.forEach(language=>{
+  vscode.languages.registerColorProvider(language, new ColorDocumentColorProvider);
 });
