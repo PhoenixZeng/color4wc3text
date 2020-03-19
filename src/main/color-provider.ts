@@ -124,7 +124,7 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
   }
 }
 
-const hexSupportLanguages = ["jass","lua","wurst","ini","vjass","zinc","fdf","json"];
+const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json"];
 const colorSupportLanguages = ["lua","vjass","zinc"];
 
 hexSupportLanguages.forEach(language=>{
