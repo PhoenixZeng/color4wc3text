@@ -22,7 +22,10 @@
 		"onLanguage:ini",
 		"onLanguage:zinc",
 		"onLanguage:fdf",
-		"onLanguage:json"
+		"onLanguage:json",
+		"onLanguage:xml",
+		"onLanguage:html",
+		"onLanguage:css"
 	],
 	"main": "./out/extension.js",
 	"contributes": {},
