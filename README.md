@@ -7,15 +7,35 @@
 支持以下语法
 
 ``` txt
-    |cffffffff|r
-    color(255,255,255,255)
-    #ffffff
+    war3
+         - |cffffffff
+    color
+         - color(255,255,255)
+         - color(255,255,255,255)
+    css
+         - #ffffff
 ```
 
-目前支持以下格式的文件
+目前支持以下后缀格式的文件
 
-``` txt
-    "jass","lua","ini","vjass","zinc","fdf","json","html","css","xml"
-```
+    war3
+        - jass
+        - lua
+        - ini
+        - vjass
+        - zinc
+        - fdf
+        - json
+
+    color
+        - lua
+        - vjass
+        - zinc
+
+    css
+        - html
+        - css
+        - xml
+        - json
 
 群:692125060

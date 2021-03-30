@@ -4,6 +4,18 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.1]
+
+- color支持三个参数的场景
+
+## [0.1.0]
+
+- 修复color逗号的错误 添加css语法识别
+
+## [0.0.10]
+
+- 修复BUG并且更新依赖
+
 ## [0.0.8]
 
 - 添加了fdf和json格式

@@ -1,8 +1,8 @@
 {
 	"name": "color4wc3text",
-	"displayName": "color4wc3text",
-	"description": "make wc3 color-prefix colorful",
-	"version": "0.0.10",
+	"displayName": "ColorPicker颜色选择器",
+	"description": "War3ColorPicker颜色选择器,也支持一些常用格式",
+	"version": "0.1.1",
 	"publisher": "PhoenixZeng",
 	"engines": {
 		"vscode": "^1.37.0"
@@ -12,7 +12,13 @@
 	],
 	"icon": "resource/icon.png",
 	"keywords": [
-		"warcraft"
+		"warcraft",
+		"wc3",
+		"war3",
+		"color",
+		"colour",
+		"color picker",
+		"colour picker"
 	],
 	"markdown": "github",
 	"activationEvents": [
@@ -35,7 +41,10 @@
 		"lint": "eslint src --ext ts",
 		"watch": "tsc -watch -p ./",
 		"pretest": "npm run compile && npm run lint",
-		"test": "node ./out/test/runTest.js"
+		"test": "node ./out/test/runTest.js",
+		"publish": "vsce publish",
+		"pubpatch": "vsce publish patch",
+		"package": "vsce package"
 	},
 	"devDependencies": {
 		"@types/glob": "^7.1.1",
