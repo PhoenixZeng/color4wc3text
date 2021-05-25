@@ -2,7 +2,7 @@
 	"name": "color4wc3text",
 	"displayName": "ColorPicker颜色选择器",
 	"description": "War3ColorPicker颜色选择器,也支持一些常用格式",
-	"version": "0.1.3",
+	"version": "0.1.2",
 	"publisher": "PhoenixZeng",
 	"engines": {
 		"vscode": "^1.37.0"
