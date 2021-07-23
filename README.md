@@ -12,6 +12,7 @@
     color
          - color(255,255,255)
          - color(255,255,255,255)
+         大写开头`Color`也可识别
     css
          - #ffffff
 ```

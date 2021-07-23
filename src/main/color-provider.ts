@@ -146,12 +146,12 @@ class CssDocumentColorProvider implements vscode.DocumentColorProvider {
 
 
 class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
-
+  startsWithUppers = new Map<string,boolean>();
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
     let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[cC]olor\( *((\d+)( *, *\d+ *){3})\)/, "g");
+    let colorReg = new RegExp(/[cC]olor\( *(\d+)( *, *\d+ *){3}\)/, "g");
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
       let colotSet = lineText.match(colorReg);
@@ -165,6 +165,8 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
           let g = Number.parseInt(nums?nums[2]:"255") / 255;
           let b = Number.parseInt(nums?nums[3]:"255") / 255;
           let a = Number.parseInt(nums?nums[4]:"255") / 255;
+          
+          this.startsWithUppers.set(x, x.charCodeAt(0) >= 65 && x.charCodeAt(0)<=90) ;
           colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
           posstion += x.length;
         });
@@ -180,7 +182,11 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
     let a = color.alpha;
     let document = context.document;
     let range = context.range;
-    return [new vscode.ColorPresentation(`color(${
+    let name = "color";
+    if (this.startsWithUppers.get(document.getText(range))) {
+      name = 'C' + name.substring(1, name.length)
+    }
+    return [new vscode.ColorPresentation(name+`(${
         color2ColorClassColorCode(new vscode.Color(r, g, b, a))
       })`)];
 
@@ -188,12 +194,12 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
 }
 
 class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
-  ['首字母大写'] = true;
+  startsWithUppers = new Map<string,boolean>();
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
     let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[cC]olor\( *((\d+)( *, *\d+ *){2})\)/, "g");
+    let colorReg = new RegExp(/[cC]olor\( *(\d+)( *, *\d+ *){2}\)/, "g");
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
       let colotSet = lineText.match(colorReg);
@@ -207,6 +213,8 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
           let g = Number.parseInt(nums?nums[2]:"255") / 255;
           let b = Number.parseInt(nums?nums[3]:"255") / 255;
           let a = 1;
+
+          this.startsWithUppers.set(x, x.charCodeAt(0) >= 65 && x.charCodeAt(0)<=90) ;
           colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
           posstion += x.length;
         });
@@ -222,7 +230,11 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
     let a = color.alpha;
     let document = context.document;
     let range = context.range;
-    return [new vscode.ColorPresentation(`color(${
+    let name = "color";
+    if (this.startsWithUppers.get(document.getText(range))) {
+      name = 'C' + name.substring(1, name.length)
+    }
+    return [new vscode.ColorPresentation(name + `(${
         color2Color3ClassColorCode(new vscode.Color(r, g, b, a))
       })`)];
 
