@@ -31,8 +31,12 @@
 		"onLanguage:json",
 		"onLanguage:xml",
 		"onLanguage:html",
-		"onLanguage:css"
+		"onLanguage:css",
+		"onLanguage:JavaScript",
+		"onLanguage:typescript"
 	],
+
+	
 	"main": "./out/extension.js",
 	"contributes": {},
 	"scripts": {

@@ -4,6 +4,11 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.7]
+
+- Color支持大写
+- 对js和ts提供支持
+
 ## [0.1.1]
 
 - color支持三个参数的场景
