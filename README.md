@@ -27,16 +27,22 @@
         - zinc
         - fdf
         - json
+        - js
+        - ts
 
     color
         - lua
         - vjass
         - zinc
+        - js
+        - ts
 
     css
         - html
         - css
         - xml
         - json
+        - js
+        - ts
 
 群:692125060

@@ -241,9 +241,9 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
   }
 }
 
-const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json"];
-const colorSupportLanguages = ["lua","vjass","zinc"];
-const cssSupportLanguages = ["css","html","xml","json"];
+const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json","JavaScript","typescript"];
+const colorSupportLanguages = ["lua","vjass","zinc","JavaScript","typescript"];
+const cssSupportLanguages = ["css","html","xml","json","JavaScript","typescript"];
 
 hexSupportLanguages.forEach(language=>{
   vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);
