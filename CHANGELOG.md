@@ -2,7 +2,12 @@
 
 All notable changes to the "color4wc3text" extension will be documented in this file.
 
-Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
+Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file.
+
+## [0.1.8]
+
+- Color现在支持十六进制表述
+- 修复js和ts支持
 
 ## [0.1.7]
 
