@@ -73,15 +73,23 @@ const color2Color3ClassColorCode = (color: vscode.Color,flags?:boolean[]) => {
   return "0, 0, 0";
 };
 
-const numberFormat = (str: string) => {
+const numberFormat = (str: string,base?: number) => {
   if (str.startsWith("0x") || str.startsWith("0X")) {
     return Number.parseInt(str)
   }
-  if (Number.parseInt(str).toString()==str) {
-    return Number.parseInt(str)
-  }
-  if (str.match(new RegExp(/\[0-9a-fA-F]{2}/, "g"))) {
-    return Number.parseInt("0x" +str)
+  if (base) {
+    if (base == 16) {
+      return Number.parseInt("0x" +str)
+    }else{
+      Number.parseInt(str)
+    }
+  }else{
+    if (Number.parseInt(str).toString()==str) {
+      return Number.parseInt(str)
+    }
+    if (str.match(new RegExp(/\[0-9a-fA-F]{2}/, "g"))) {
+      return Number.parseInt("0x" +str)
+    }
   }
   return Number.parseInt(str)
 };
@@ -101,10 +109,10 @@ class HexDocumentColorProvider implements vscode.DocumentColorProvider {
         colotSet.forEach(x => {
           posstion = lineText.indexOf(x, posstion);
           let range = new vscode.Range(i, posstion, i, posstion + x.length);
-          let a = numberFormat( lineText.substr(posstion + 2, 2)) / 255;
-          let r = numberFormat( lineText.substr(posstion + 4, 2)) / 255;
-          let g = numberFormat( lineText.substr(posstion + 6, 2)) / 255;
-          let b = numberFormat( lineText.substr(posstion + 8, 2)) / 255;
+          let a = numberFormat( lineText.substr(posstion + 2, 2),16) / 255;
+          let r = numberFormat( lineText.substr(posstion + 4, 2),16) / 255;
+          let g = numberFormat( lineText.substr(posstion + 6, 2),16) / 255;
+          let b = numberFormat( lineText.substr(posstion + 8, 2),16) / 255;
           colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
           posstion += x.length;
         });
@@ -148,9 +156,9 @@ class CssDocumentColorProvider implements vscode.DocumentColorProvider {
           posstion = lineText.indexOf(x, posstion);
           let range = new vscode.Range(i, posstion, i, posstion + x.length);
           let a = 255 / 255;
-          let r = numberFormat( lineText.substr(posstion + 1, 2)) / 255;
-          let g = numberFormat( lineText.substr(posstion + 3, 2)) / 255;
-          let b = numberFormat( lineText.substr(posstion + 5, 2)) / 255;
+          let r = numberFormat( lineText.substr(posstion + 1, 2),16) / 255;
+          let g = numberFormat( lineText.substr(posstion + 3, 2),16) / 255;
+          let b = numberFormat( lineText.substr(posstion + 5, 2),16) / 255;
           colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
           posstion += x.length;
         });
@@ -274,9 +282,9 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
   }
 }
 
-const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json","javascript","typescript"];
-const colorSupportLanguages = ["lua","vjass","zinc","javascript","typescript"];
-const cssSupportLanguages = ["css","html","xml","json","javascript","typescript"];
+const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json",'js',"javascript","typescript"];
+const colorSupportLanguages = ["lua","vjass","zinc",'js',"javascript","typescript"];
+const cssSupportLanguages = ["css","html","xml","json",'js',"javascript","typescript"];
 
 hexSupportLanguages.forEach(language=>{
   vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);

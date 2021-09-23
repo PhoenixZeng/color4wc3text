@@ -4,10 +4,11 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [0.1.8]
+## [0.1.9]
 
 - Color现在支持十六进制表述
 - 修复js和ts支持
+- 修复一直为黑色的bug
 
 ## [0.1.7]
 
