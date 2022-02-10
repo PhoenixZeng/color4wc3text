@@ -107,10 +107,10 @@ class HexDocumentColorProvider implements vscode.DocumentColorProvider {
         colotSet.forEach(x => {
           posstion = lineText.indexOf(x, posstion);
           let range = new vscode.Range(i, posstion, i, posstion + x.length);
-          let a = numberFormat( lineText.substr(posstion + 2, 2),16) / 255;
-          let r = numberFormat( lineText.substr(posstion + 4, 2),16) / 255;
-          let g = numberFormat( lineText.substr(posstion + 6, 2),16) / 255;
-          let b = numberFormat( lineText.substr(posstion + 8, 2),16) / 255;
+          let a = numberFormat( lineText.substring(posstion + 2, posstion + 2 + 2),16) / 255;
+          let r = numberFormat( lineText.substring(posstion + 4, posstion + 4 + 2),16) / 255;
+          let g = numberFormat( lineText.substring(posstion + 6, posstion + 6 + 2),16) / 255;
+          let b = numberFormat( lineText.substring(posstion + 8, posstion + 8 + 2),16) / 255;
           colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
           posstion += x.length;
         });
@@ -154,9 +154,9 @@ class CssDocumentColorProvider implements vscode.DocumentColorProvider {
           posstion = lineText.indexOf(x, posstion);
           let range = new vscode.Range(i, posstion, i, posstion + x.length);
           let a = 255 / 255;
-          let r = numberFormat( lineText.substr(posstion + 1, 2),16) / 255;
-          let g = numberFormat( lineText.substr(posstion + 3, 2),16) / 255;
-          let b = numberFormat( lineText.substr(posstion + 5, 2),16) / 255;
+          let r = numberFormat( lineText.substring(posstion + 1, posstion + 1 + 2),16) / 255;
+          let g = numberFormat( lineText.substring(posstion + 3, posstion + 3 + 2),16) / 255;
+          let b = numberFormat( lineText.substring(posstion + 5, posstion + 5 + 2),16) / 255;
           colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
           posstion += x.length;
         });
@@ -197,10 +197,10 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
           if (nums) {
             posstion = lineText.indexOf(x, posstion);
             let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums?nums[1]:"255") / 255;
-            let g = numberFormat(nums?nums[2]:"255") / 255;
-            let b = numberFormat(nums?nums[3]:"255") / 255;
-            let a = numberFormat(nums?nums[4]:"255") / 255;
+            let r = numberFormat(nums[1]) / 255;
+            let g = numberFormat(nums[2]) / 255;
+            let b = numberFormat(nums[3]) / 255;
+            let a = numberFormat(nums[4]) / 255;
             
             this.startsWithUppers.set(x, x.charCodeAt(0) >= 65 && x.charCodeAt(0)<=90) ;
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
@@ -248,9 +248,9 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
           {
             posstion = lineText.indexOf(x, posstion);
             let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums?nums[1]:"255") / 255;
-            let g = numberFormat(nums?nums[2]:"255") / 255;
-            let b = numberFormat(nums?nums[3]:"255") / 255;
+            let r = numberFormat(nums[1]) / 255;
+            let g = numberFormat(nums[2]) / 255;
+            let b = numberFormat(nums[3]) / 255;
             let a = 1;
             this.startsWithUppers.set(x, x.charCodeAt(0) >= 65 && x.charCodeAt(0)<=90) ;
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
@@ -287,21 +287,21 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
     let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[rR][gG][bB][aA]\( *\w+( *, *\w+ *){3}\)/, "g");
+    let colorReg = new RegExp(/[rR][gG][bB][aA]\( *\w+( *, *\w+ *){2} *, *\w*\.?\w* *\)/, "g");
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
       let colotSet = lineText.match(colorReg);
       let posstion = 0;
       if (colotSet) {
         colotSet.forEach(x => {
-          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\w+) */));
+          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\w*\.?\w*) */));
           if (nums) {
             posstion = lineText.indexOf(x, posstion);
             let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums?nums[1]:"255") / 255;
-            let g = numberFormat(nums?nums[2]:"255") / 255;
-            let b = numberFormat(nums?nums[3]:"255") / 255;
-            let a = numberFormat(nums?nums[4]:"255") / 255;
+            let r = numberFormat(nums[1]) / 255;
+            let g = numberFormat(nums[2]) / 255;
+            let b = numberFormat(nums[3]) / 255;
+            let a = Number.parseFloat(nums[4]) ;
             
             this.range = range
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
@@ -322,7 +322,7 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
     let range = context.range;
     let name = 'rgba';
     return [new vscode.ColorPresentation(name+`(${
-        color2ColorClassColorCode(new vscode.Color(r, g, b, a))
+      color2Color3ClassColorCode(new vscode.Color(r, g, b, 1)) + ', ' + a.toFixed(2)
       })`)];
 
   }
@@ -347,9 +347,9 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
           if (nums) {
             posstion = lineText.indexOf(x, posstion);
             let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums?nums[1]:"255") / 255;
-            let g = numberFormat(nums?nums[2]:"255") / 255;
-            let b = numberFormat(nums?nums[3]:"255") / 255;
+            let r = numberFormat(nums[1]) / 255;
+            let g = numberFormat(nums[2]) / 255;
+            let b = numberFormat(nums[3]) / 255;
             
             this.range = range
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, 1)));
