@@ -287,14 +287,14 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
     let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[rR][gG][bB][aA]\( *\w+( *, *\w+ *){2} *, *\w*\.?\w* *\)/, "g");
+    let colorReg = new RegExp(/[rR][gG][bB][aA]\( *\w+( *, *\w+ *){2} *, *\d*\.?\d* *\)/, "g");
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
       let colotSet = lineText.match(colorReg);
       let posstion = 0;
       if (colotSet) {
         colotSet.forEach(x => {
-          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\w*\.?\w*) */));
+          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\d*\.?\d*) */));
           if (nums) {
             posstion = lineText.indexOf(x, posstion);
             let range = new vscode.Range(i, posstion, i, posstion + x.length);
