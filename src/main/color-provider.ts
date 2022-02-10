@@ -1,11 +1,9 @@
-/*
- * @Date: 2020-02-20 22:15:07
- * @LastEditTime: 2020-02-21 00:50:33
- */
+
 /*
  * @Date: 2020-02-20 22:15:07
  * @LastEditTime: 2020-02-21 00:35:48
  */
+import { KeyFormat } from 'crypto';
 import * as vscode from 'vscode';
 
 
@@ -282,9 +280,106 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
   }
 }
 
+class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
+  nameMapper = new Map<vscode.Range,string>();
+  range : any
+  /// 颜色改变到文档
+  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
+    let lineCount = document.lineCount;
+    let colors = new Array<vscode.ColorInformation>();
+    let colorReg = new RegExp(/[rR][gG][bB][aA]\( *\w+( *, *\w+ *){3}\)/, "g");
+    for (let i = 0; i < lineCount; i++) {
+      let lineText = document.lineAt(i).text;
+      let colotSet = lineText.match(colorReg);
+      let posstion = 0;
+      if (colotSet) {
+        colotSet.forEach(x => {
+          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\w+) */));
+          if (nums) {
+            posstion = lineText.indexOf(x, posstion);
+            let range = new vscode.Range(i, posstion, i, posstion + x.length);
+            let r = numberFormat(nums?nums[1]:"255") / 255;
+            let g = numberFormat(nums?nums[2]:"255") / 255;
+            let b = numberFormat(nums?nums[3]:"255") / 255;
+            let a = numberFormat(nums?nums[4]:"255") / 255;
+            
+            this.range = range
+            colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
+            posstion += x.length;
+          }
+        });
+      }
+    }
+    return colors;
+  }
+  /// 文档改变到颜色
+  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    let r = color.red;
+    let g = color.green;
+    let b = color.blue;
+    let a = color.alpha;
+    let document = context.document;
+    let range = context.range;
+    let name = 'rgba';
+    return [new vscode.ColorPresentation(name+`(${
+        color2ColorClassColorCode(new vscode.Color(r, g, b, a))
+      })`)];
+
+  }
+}
+
+
+class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
+  nameMapper = new Map<vscode.Range,string>();
+  range : any
+  /// 颜色改变到文档
+  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
+    let lineCount = document.lineCount;
+    let colors = new Array<vscode.ColorInformation>();
+    let colorReg = new RegExp(/[rR][gG][bB]\( *\w+( *, *\w+ *){2}\)/, "g");
+    for (let i = 0; i < lineCount; i++) {
+      let lineText = document.lineAt(i).text;
+      let colotSet = lineText.match(colorReg);
+      let posstion = 0;
+      if (colotSet) {
+        colotSet.forEach(x => {
+          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) */));
+          if (nums) {
+            posstion = lineText.indexOf(x, posstion);
+            let range = new vscode.Range(i, posstion, i, posstion + x.length);
+            let r = numberFormat(nums?nums[1]:"255") / 255;
+            let g = numberFormat(nums?nums[2]:"255") / 255;
+            let b = numberFormat(nums?nums[3]:"255") / 255;
+            
+            this.range = range
+            colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, 1)));
+            posstion += x.length;
+          }
+        });
+      }
+    }
+    return colors;
+  }
+  /// 文档改变到颜色
+  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    let r = color.red;
+    let g = color.green;
+    let b = color.blue;
+    let a = color.alpha;
+    let document = context.document;
+    let range = context.range;
+    let name = 'rgb';
+    return [new vscode.ColorPresentation(name+`(${
+      color2Color3ClassColorCode(new vscode.Color(r, g, b, 1))
+      })`)];
+
+  }
+}
+
 const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json",'js',"javascript","typescript"];
 const colorSupportLanguages = ["lua","vjass","zinc",'js',"javascript","typescript"];
-const cssSupportLanguages = ["css","html","xml","json",'js',"javascript","typescript"];
+const cssSupportLanguages = ["css","html","xml","json",'js',"javascript","typescript","lua","ini"];
+const rgbaSupportLanguages = ["css","html",'js',"javascript","typescript"];
 
 hexSupportLanguages.forEach(language=>{
   vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);
@@ -295,4 +390,8 @@ colorSupportLanguages.forEach(language=>{
 });
 cssSupportLanguages.forEach(language=>{
   vscode.languages.registerColorProvider(language, new CssDocumentColorProvider);
+});
+rgbaSupportLanguages.forEach(language=>{
+  vscode.languages.registerColorProvider(language, new RGBADocumentColorProvider);
+  vscode.languages.registerColorProvider(language, new RGBDocumentColorProvider);
 });
