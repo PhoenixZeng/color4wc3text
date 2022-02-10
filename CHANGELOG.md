@@ -4,6 +4,10 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.10]
+
+- 支持了rgba和rgb
+
 ## [0.1.9]
 
 - Color现在支持十六进制表述
