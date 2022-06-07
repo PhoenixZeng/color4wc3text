@@ -4,6 +4,10 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file.
 
+## [0.1.14]
+
+- 现在修改Color和RGBA不会影响大小写了
+
 ## [0.1.10]
 
 - 支持了rgba和rgb

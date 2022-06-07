@@ -240,6 +240,7 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
       let colotSet = lineText.match(colorReg);
+      console.log('colotSet',colotSet?.length)
       let posstion = 0;
       if (colotSet) {
         colotSet.forEach(x => {
