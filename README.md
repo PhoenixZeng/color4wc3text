@@ -8,53 +8,35 @@
 支持以下语法
 
 ``` txt
-    war3
+    war3语法
          - |cffffffff
-    color
+    color函数
          - color(255,255,255)
          - color(255,255,255,255)
          大写开头`Color`也可识别
-    rgba
+    rgba函数
          - rgb(255,255,255)
          - rgba(255,255,255,0.5)
-         大写也可以识别 但是选择颜色后变为小写
+         大写也可以识别
     css
          - #ffffff
 ```
 
 目前支持以下后缀格式的文件
-
-    war3
-        - jass
-        - lua
-        - ini
-        - vjass
-        - zinc
-        - fdf
-        - json
-        - js
-        - ts
-
-    color
-        - lua
-        - vjass
-        - zinc
-        - js
-        - ts
-    rgba
-        - html
-        - css
-        - js
-        - ts
-    css
-        - html
-        - css
-        - xml
-        - json
-        - js
-        - ts
-        - lua
-        - ini
+|后缀类型|war3语法|color函数|rgba函数|css|
+|:---|---|---|---|---|
+jass | 支持 | 支持
+*.lua | 支持 | 支持 | - | 支持
+*.ini | 支持 | - | - | 支持
+vjass | 支持 | 支持
+*.zinc | 支持 | 支持
+*.fdf | 支持
+*.json | 支持| - | - | 支持
+*.js | 支持 | 支持 | 支持 | 支持
+*.ts | 支持 | 支持 | 支持 | 支持
+*.xml | - | - | - | 支持
+*.html | - | - | 支持 | 支持
+*.css | - | - | 支持 | 支持
 
 旧群被封 新群:
 魔兽争霸3 lua作图交流群:1019770872

@@ -92,6 +92,11 @@ const numberFormat = (str: string,base?: number) => {
   return Number.parseInt(str)
 };
 
+const getFuncName = (document: vscode.TextDocument, range: vscode.Range) => {
+  let name = document.getText(range);
+  return name.substring(0, name.indexOf('(')) 
+}
+
 class HexDocumentColorProvider implements vscode.DocumentColorProvider {
 
   /// 颜色改变到文档
@@ -217,12 +222,7 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
     let g = color.green;
     let b = color.blue;
     let a = color.alpha;
-    let document = context.document;
-    let range = context.range;
-    let name = "color";
-    if (this.startsWithUppers.get(document.getText(range))) {
-      name = 'C' + name.substring(1, name.length)
-    }
+    let name = getFuncName(context.document, context.range);
     return [new vscode.ColorPresentation(name+`(${
         color2ColorClassColorCode(new vscode.Color(r, g, b, a))
       })`)];
@@ -267,16 +267,10 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
     let g = color.green;
     let b = color.blue;
     let a = color.alpha;
-    let document = context.document;
-    let range = context.range;
-    let name = "color";
-    if (this.startsWithUppers.get(document.getText(range))) {
-      name = 'C' + name.substring(1, name.length)
-    }
+    let name = getFuncName(context.document, context.range);
     return [new vscode.ColorPresentation(name + `(${
         color2Color3ClassColorCode(new vscode.Color(r, g, b, a))
       })`)];
-
   }
 }
 
@@ -318,9 +312,7 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
     let g = color.green;
     let b = color.blue;
     let a = color.alpha;
-    let document = context.document;
-    let range = context.range;
-    let name = 'rgba';
+    let name = getFuncName(context.document, context.range);
     return [new vscode.ColorPresentation(name+`(${
       color2Color3ClassColorCode(new vscode.Color(r, g, b, 1)) + ', ' + a.toFixed(2)
       })`)];
@@ -366,9 +358,7 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
     let g = color.green;
     let b = color.blue;
     let a = color.alpha;
-    let document = context.document;
-    let range = context.range;
-    let name = 'rgb';
+    let name = getFuncName(context.document, context.range);
     return [new vscode.ColorPresentation(name+`(${
       color2Color3ClassColorCode(new vscode.Color(r, g, b, 1))
       })`)];
@@ -377,7 +367,7 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
 }
 
 const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json",'js',"javascript","typescript"];
-const colorSupportLanguages = ["lua","vjass","zinc",'js',"javascript","typescript"];
+const colorSupportLanguages = ["jass","lua","vjass","zinc",'js',"javascript","typescript"];
 const cssSupportLanguages = ["css","html","xml","json",'js',"javascript","typescript","lua","ini"];
 const rgbaSupportLanguages = ["css","html",'js',"javascript","typescript"];
 
