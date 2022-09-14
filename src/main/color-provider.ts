@@ -1,9 +1,3 @@
-
-/*
- * @Date: 2020-02-20 22:15:07
- * @LastEditTime: 2020-02-21 00:35:48
- */
-import { KeyFormat } from 'crypto';
 import * as vscode from 'vscode';
 
 
@@ -98,7 +92,6 @@ const getFuncName = (document: vscode.TextDocument, range: vscode.Range) => {
 }
 
 class HexDocumentColorProvider implements vscode.DocumentColorProvider {
-
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
@@ -133,7 +126,7 @@ class HexDocumentColorProvider implements vscode.DocumentColorProvider {
     let range = context.range;
     let documentText = document.getText(range);
     return [new vscode.ColorPresentation(`${
-      documentText.substr(0, 2)
+      documentText.substring(0, 2)
       }${
       color2JColorCode(new vscode.Color(r, g, b, a))
       }${
@@ -175,9 +168,6 @@ class CssDocumentColorProvider implements vscode.DocumentColorProvider {
     let g = color.green;
     let b = color.blue;
     let a = color.alpha;
-    let document = context.document;
-    let range = context.range;
-    let documentText = document.getText(range);
     return [new vscode.ColorPresentation(`#${
       color2CssColorCode(new vscode.Color(r, g, b, a))
     }`)]
@@ -186,7 +176,6 @@ class CssDocumentColorProvider implements vscode.DocumentColorProvider {
 
 
 class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
-  startsWithUppers = new Map<string,boolean>();
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
@@ -207,7 +196,6 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
             let b = numberFormat(nums[3]) / 255;
             let a = numberFormat(nums[4]) / 255;
             
-            this.startsWithUppers.set(x, x.charCodeAt(0) >= 65 && x.charCodeAt(0)<=90) ;
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
             posstion += x.length;
           }
@@ -231,7 +219,6 @@ class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
 }
 
 class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
-  startsWithUppers = new Map<string,boolean>();
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
@@ -240,7 +227,6 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
     for (let i = 0; i < lineCount; i++) {
       let lineText = document.lineAt(i).text;
       let colotSet = lineText.match(colorReg);
-      console.log('colotSet',colotSet?.length)
       let posstion = 0;
       if (colotSet) {
         colotSet.forEach(x => {
@@ -253,7 +239,6 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
             let g = numberFormat(nums[2]) / 255;
             let b = numberFormat(nums[3]) / 255;
             let a = 1;
-            this.startsWithUppers.set(x, x.charCodeAt(0) >= 65 && x.charCodeAt(0)<=90) ;
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
             posstion += x.length;
           }
@@ -276,8 +261,6 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
 }
 
 class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
-  nameMapper = new Map<vscode.Range,string>();
-  range : any
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
@@ -298,7 +281,6 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
             let b = numberFormat(nums[3]) / 255;
             let a = Number.parseFloat(nums[4]) ;
             
-            this.range = range
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
             posstion += x.length;
           }
@@ -323,8 +305,6 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
 
 
 class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
-  nameMapper = new Map<vscode.Range,string>();
-  range : any
   /// 颜色改变到文档
   provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
     let lineCount = document.lineCount;
@@ -344,7 +324,6 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
             let g = numberFormat(nums[2]) / 255;
             let b = numberFormat(nums[3]) / 255;
             
-            this.range = range
             colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, 1)));
             posstion += x.length;
           }
