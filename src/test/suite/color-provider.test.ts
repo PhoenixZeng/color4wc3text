@@ -6,6 +6,7 @@ import {
   CssDocumentColorProvider,
   ColorDocumentColorProvider,
   parseComponent,
+  RGBADocumentColorProvider,
 } from "../../main/color-provider";
 
 // —— 测试用 mock ——
@@ -182,5 +183,89 @@ suite("Color Providers", () => {
       assert.strictEqual(parseComponent("FF"), undefined);
       assert.strictEqual(parseComponent("abc"), undefined);
     });
+  });
+});
+
+
+suite("格式设置与取消", () => {
+  const configuration = () => vscode.workspace.getConfiguration("color4wc3text");
+  let previousCase: string | undefined;
+  let previousPrecision: number | undefined;
+  suiteSetup(async () => {
+    previousCase = configuration().inspect<string>("hexCase")?.globalValue;
+    previousPrecision = configuration().inspect<number>("floatPrecision")?.globalValue;
+  });
+  teardown(async () => {
+    await configuration().update("hexCase", previousCase, vscode.ConfigurationTarget.Global);
+    await configuration().update("floatPrecision", previousPrecision, vscode.ConfigurationTarget.Global);
+  });
+
+  test("自动大小写由首个 HEX 字母决定，不受前缀与正文影响", async () => {
+    await configuration().update("hexCase", "auto", vscode.ConfigurationTarget.Global);
+    const war3 = new HexDocumentColorProvider();
+    const css = new CssDocumentColorProvider();
+    const color = new vscode.Color(1, 0, 0, 1);
+    for (const [original, expected] of [
+      ["|C12aB0000ABC|r", "|Cffff0000ABC|r"],
+      ["|c12Ab0000abc|r", "|cFFFF0000abc|r"],
+      ["|c12345678abc|r", "|cFFFF0000abc|r"],
+    ]) {
+      assert.strictEqual(firstOrFail(await presentationsOf(war3, color, original), "presentation").label, expected);
+    }
+    for (const [original, expected] of [["#12aB00", "#ff0000"], ["#12Ab00", "#FF0000"], ["#123456", "#FF0000"]]) {
+      assert.strictEqual(firstOrFail(await presentationsOf(css, color, original), "presentation").label, expected);
+    }
+  });
+
+  test("强制大小写设置实时生效且保留 CSS alpha", async () => {
+    for (const [mode, expected] of [["lowercase", "#ff0000ff"], ["uppercase", "#FF0000FF"]]) {
+      await configuration().update("hexCase", mode, vscode.ConfigurationTarget.Global);
+      assert.strictEqual(firstOrFail(await presentationsOf(new CssDocumentColorProvider(), new vscode.Color(1, 0, 0, 1), "#AbCd"), "presentation").label, expected);
+      assert.strictEqual(firstOrFail(await presentationsOf(new HexDocumentColorProvider(), new vscode.Color(1, 0, 0, 1), "|C12345678Text|r"), "presentation").label, mode === "lowercase" ? "|Cffff0000Text|r" : "|CFFFF0000Text|r");
+    }
+  });
+
+  test("默认三位精度舍入，不补尾零", async () => {
+    await configuration().update("floatPrecision", undefined, vscode.ConfigurationTarget.Global);
+    assert.strictEqual(configuration().get("floatPrecision"), 3);
+    for (const [alpha, original, expected] of [
+      [0.004, "rgba(255, 0, 0, 0.004)", "rgba(255, 0, 0, 0.004)"],
+      [0.0004, "rgba(255, 0, 0, 0.0004)", "rgba(255, 0, 0, 0)"],
+      [0.4, "RGBA(255, 0, 0, .4)", "RGBA(255, 0, 0, 0.4)"],
+      [0.1236, "rgba(255, 0, 0, 0.1236)", "rgba(255, 0, 0, 0.124)"],
+    ] as const) {
+      assert.strictEqual(firstOrFail(await presentationsOf(new RGBADocumentColorProvider(), new vscode.Color(1, 0, 0, alpha), original), "presentation").label, expected);
+    }
+  });
+
+  test("浮点精度设置实时生效", async () => {
+    await configuration().update("floatPrecision", 5, vscode.ConfigurationTarget.Global);
+    assert.strictEqual(firstOrFail(await presentationsOf(new RGBADocumentColorProvider(), new vscode.Color(1, 0, 0, 0.123456), "rgba(255, 0, 0, .5)"), "presentation").label, "rgba(255, 0, 0, 0.12346)");
+  });
+
+  test("零位精度与极小小数保持可重新识别的十进制格式", async () => {
+    const provider = new RGBADocumentColorProvider();
+    for (const [precision, alpha, expected] of [[0, 0.4, "0"], [0, 0.8, "1"], [7, 0.0000001, "0.0000001"]] as const) {
+      await configuration().update("floatPrecision", precision, vscode.ConfigurationTarget.Global);
+      const label = firstOrFail(await presentationsOf(provider, new vscode.Color(1, 0, 0, alpha), "rgba(255, 0, 0, 1)"), "presentation").label;
+      assert.strictEqual(label, `rgba(255, 0, 0, ${expected})`);
+      assert.strictEqual(firstOrFail(await colorsOf(provider, label), "round trip").color.alpha, Number(expected));
+    }
+  });
+
+  test("已取消的无颜色文档不读取任何行", async () => {
+    let reads = 0;
+    const document = { lineCount: 10000, lineAt: () => { reads++; return { text: "无颜色正文" }; } } as unknown as vscode.TextDocument;
+    const token = { isCancellationRequested: true } as vscode.CancellationToken;
+    assert.deepStrictEqual(await new HexDocumentColorProvider().provideDocumentColors(document, token), []);
+    assert.strictEqual(reads, 0);
+  });
+
+  test("无匹配行之间也检查取消", async () => {
+    let reads = 0;
+    const token = { isCancellationRequested: false };
+    const document = { lineCount: 10000, lineAt: () => { reads++; token.isCancellationRequested = true; return { text: "无颜色正文" }; } } as unknown as vscode.TextDocument;
+    assert.deepStrictEqual(await new CssDocumentColorProvider().provideDocumentColors(document, token as vscode.CancellationToken), []);
+    assert.strictEqual(reads, 1);
   });
 });

@@ -15,6 +15,14 @@ const toByte = (value: number): number => clamp(Math.round(value * 255), 0, 255)
 const toHexByte = (value: number): string =>
   toByte(value).toString(16).padStart(2, "0").toUpperCase();
 
+/** 根据目标颜色代码及当前资源设置决定 HEX 大小写。 */
+const formatHexCase = (hex: string, originalHex: string, document: vscode.TextDocument): string => {
+  const mode = vscode.workspace.getConfiguration("color4wc3text", document.uri).get<string>("hexCase", "auto");
+  const firstLetter = originalHex.match(/[a-fA-F]/)?.[0];
+  const lowercase = mode === "lowercase" || (mode === "auto" && firstLetter !== undefined && firstLetter === firstLetter.toLowerCase());
+  return lowercase ? hex.toLowerCase() : hex.toUpperCase();
+};
+
 /** 转换为十进制颜色分量。 */
 const toDecByte = (value: number): string => toByte(value).toString(10);
 
@@ -105,6 +113,7 @@ const getFunctionName = (text: string): string => {
 const forEachMatch = (
   document: vscode.TextDocument,
   regex: RegExp,
+  token: vscode.CancellationToken,
   callback: (match: RegExpExecArray, line: number) => boolean | void,
 ): void => {
   const flags = regex.flags.includes("g") ? regex.flags : `${regex.flags}g`;
@@ -113,6 +122,7 @@ const forEachMatch = (
   const re = new RegExp(regex.source, flags);
 
   for (let line = 0; line < document.lineCount; line++) {
+    if (token.isCancellationRequested) { return; }
     const lineText = document.lineAt(line).text;
 
     re.lastIndex = 0;
@@ -157,7 +167,7 @@ export class HexDocumentColorProvider implements vscode.DocumentColorProvider {
   ): vscode.ProviderResult<vscode.ColorInformation[]> {
     const colors: vscode.ColorInformation[] = [];
 
-    forEachMatch(document, WAR3_HEX_REGEX, (match, line) => {
+    forEachMatch(document, WAR3_HEX_REGEX, token, (match, line) => {
       if (token.isCancellationRequested) {
         return false;
       }
@@ -195,7 +205,7 @@ export class HexDocumentColorProvider implements vscode.DocumentColorProvider {
     // 只替换中间 8 位 hex，前后原样保留。
     const matched = originalText.match(/^(\|[cC])([0-9a-fA-F]{8})([\s\S]*)$/);
 
-    const result = matched ? `${matched[1]}${colorToWar3Hex(color)}${matched[3]}` : originalText;
+    const result = matched ? `${matched[1]}${formatHexCase(colorToWar3Hex(color), matched[2], context.document)}${matched[3]}` : originalText;
 
     return [new vscode.ColorPresentation(result)];
   }
@@ -220,7 +230,7 @@ export class CssDocumentColorProvider implements vscode.DocumentColorProvider {
   ): vscode.ProviderResult<vscode.ColorInformation[]> {
     const colors: vscode.ColorInformation[] = [];
 
-    forEachMatch(document, CSS_HEX_REGEX, (match, line) => {
+    forEachMatch(document, CSS_HEX_REGEX, token, (match, line) => {
       if (token.isCancellationRequested) {
         return false;
       }
@@ -283,7 +293,8 @@ export class CssDocumentColorProvider implements vscode.DocumentColorProvider {
 
     const hex = colorToCssHex(color);
 
-    const result = hasAlpha ? `#${hex}${toHexByte(color.alpha)}` : `#${hex}`;
+    const outputHex = hasAlpha ? `${hex}${toHexByte(color.alpha)}` : hex;
+    const result = `#${formatHexCase(outputHex, originalHex, context.document)}`;
 
     return [new vscode.ColorPresentation(result)];
   }
@@ -304,7 +315,7 @@ export class ColorDocumentColorProvider implements vscode.DocumentColorProvider 
   ): vscode.ProviderResult<vscode.ColorInformation[]> {
     const colors: vscode.ColorInformation[] = [];
 
-    forEachMatch(document, COLOR4_REGEX, (match, line) => {
+    forEachMatch(document, COLOR4_REGEX, token, (match, line) => {
       if (token.isCancellationRequested) {
         return false;
       }
@@ -365,7 +376,7 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
   ): vscode.ProviderResult<vscode.ColorInformation[]> {
     const colors: vscode.ColorInformation[] = [];
 
-    forEachMatch(document, COLOR3_REGEX, (match, line) => {
+    forEachMatch(document, COLOR3_REGEX, token, (match, line) => {
       if (token.isCancellationRequested) {
         return false;
       }
@@ -418,14 +429,14 @@ class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
 const RGBA_REGEX =
   /\brgba\(\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*((?:\d+(?:\.\d*)?|\.\d+))\s*\)/gi;
 
-class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
+export class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
   provideDocumentColors(
     document: vscode.TextDocument,
     token: vscode.CancellationToken,
   ): vscode.ProviderResult<vscode.ColorInformation[]> {
     const colors: vscode.ColorInformation[] = [];
 
-    forEachMatch(document, RGBA_REGEX, (match, line) => {
+    forEachMatch(document, RGBA_REGEX, token, (match, line) => {
       if (token.isCancellationRequested) {
         return false;
       }
@@ -467,11 +478,13 @@ class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
     const originalText = context.document.getText(context.range);
     const functionName = getFunctionName(originalText);
 
-    return [
-      new vscode.ColorPresentation(
-        `${functionName}(${colorToThreeComponents(color)}, ${clamp(color.alpha, 0, 1).toFixed(2)})`,
-      ),
-    ];
+    const precision = vscode.workspace.getConfiguration("color4wc3text", context.document.uri)
+      .get<number>("floatPrecision", 3);
+    // 保留十进制写法，避免小数转换成当前解析器不支持的科学计数法。
+    const alpha = clamp(color.alpha, 0, 1).toFixed(precision)
+      .replace(/(\.\d*?[1-9])0+$|\.0+$/, "$1");
+
+    return [new vscode.ColorPresentation(`${functionName}(${colorToThreeComponents(color)}, ${alpha})`)];
   }
 }
 
@@ -490,7 +503,7 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
   ): vscode.ProviderResult<vscode.ColorInformation[]> {
     const colors: vscode.ColorInformation[] = [];
 
-    forEachMatch(document, RGB_REGEX, (match, line) => {
+    forEachMatch(document, RGB_REGEX, token, (match, line) => {
       if (token.isCancellationRequested) {
         return false;
       }
@@ -554,6 +567,7 @@ export function registerColorProviders(context: vscode.ExtensionContext): void {
     "vjass",
     "zinc",
     "fdf",
+    "xml",
     "json",
     "js",
     "javascript",

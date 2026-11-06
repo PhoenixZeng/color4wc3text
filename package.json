@@ -48,7 +48,42 @@
     "oxlint": "^1.91.0",
     "typescript": "^6.0.3"
   },
-  "contributes": {},
+  "contributes": {
+    "configuration": {
+      "title": "ColorPicker 颜色选择器",
+      "properties": {
+        "color4wc3text.hexCase": {
+          "type": "string",
+          "enum": [
+            "uppercase",
+            "lowercase",
+            "auto"
+          ],
+          "enumItemLabels": [
+            "大写",
+            "小写",
+            "自动"
+          ],
+          "default": "auto",
+          "scope": "resource",
+          "enumDescriptions": [
+            "将颜色代码中的 A–F 输出为大写。",
+            "将颜色代码中的 A–F 输出为小写。",
+            "按目标颜色代码从左侧找到的第一个 A–F 字母判断大小写；纯数字采用大写。"
+          ],
+          "description": "War3 和 CSS HEX 颜色回写的大小写，不改变 War3 前缀或正文。"
+        },
+        "color4wc3text.floatPrecision": {
+          "type": "integer",
+          "default": 3,
+          "minimum": 0,
+          "maximum": 20,
+          "scope": "resource",
+          "description": "RGBA 透明度回写的小数精度。按指定小数位数四舍五入并移除末尾无意义的 0；默认 3 位，例如 0.1236 → 0.124、0.0004 → 0、0.4 → 0.4。"
+        }
+      }
+    }
+  },
   "activationEvents": [
     "onLanguage:css",
     "onLanguage:fdf",
