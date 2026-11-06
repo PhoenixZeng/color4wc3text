@@ -1,367 +1,594 @@
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
+// ============================================================
+// 通用工具
+// ============================================================
 
-/// 颜色提供
-const convertInt2Hex = (int: number) => {
-  return Math.ceil(int * 255).toString(16).padStart(2, "0");
-};
-const color2CssColorCode = (color: vscode.Color) => {
-  if (color instanceof vscode.Color) {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let colorCodeString =  convertInt2Hex(r) + convertInt2Hex(g) + convertInt2Hex(b);
-    return colorCodeString;
-  }
-  return "000000";
-};
-const color2JColorCode = (color: vscode.Color) => {
-  if (color instanceof vscode.Color) {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let colorCodeString = convertInt2Hex(a) + convertInt2Hex(r) + convertInt2Hex(g) + convertInt2Hex(b);
-    return colorCodeString;
-  }
-  return "00000000";
-};
-const ceilToStr = (int: number,isHex?: boolean) => {
-  if (isHex) {
-    return '0x'+Math.ceil(int * 255).toString(16).padStart(2, "0");
-  }
-  return Math.ceil(int * 255).toString(10);
-}
+/** 将数值限制在指定范围内。 */
+const clamp = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value));
 
-const color2ColorClassColorCode = (color: vscode.Color,flags?:boolean[]) => {
-  if (color instanceof vscode.Color) {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let colorCodeString:string
-    if (flags) {
-      colorCodeString = ceilToStr(r,flags[0])+", "+ceilToStr(g,flags[1])+", "+ceilToStr(b,flags[2])+", "+ceilToStr(a,flags[3]);
-    }else{
-      colorCodeString = ceilToStr(r)+", "+ceilToStr(g)+", "+ceilToStr(b)+", "+ceilToStr(a);
-    }
-    return colorCodeString;
-  }
-  return "0, 0, 0, 255";
-};
-const color2Color3ClassColorCode = (color: vscode.Color,flags?:boolean[]) => {
-  if (color instanceof vscode.Color) {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let colorCodeString:string
-    if (flags) {
-      colorCodeString = ceilToStr(r,flags[0])+", "+ceilToStr(g,flags[1])+", "+ceilToStr(b,flags[2]);
-    }else{
-      colorCodeString = ceilToStr(r)+", "+ceilToStr(g)+", "+ceilToStr(b);
-    }
-    return colorCodeString;
-  }
-  return "0, 0, 0";
-};
+/** 将 VS Code 颜色分量（0~1）转换为 0~255 整数。 */
+const toByte = (value: number): number => clamp(Math.round(value * 255), 0, 255);
 
-const numberFormat = (str: string,base?: number) => {
-  if (str.startsWith("0x") || str.startsWith("0X")) {
-    return Number.parseInt(str)
+/** 转换为固定两位十六进制。 */
+const toHexByte = (value: number): string =>
+  toByte(value).toString(16).padStart(2, "0").toUpperCase();
+
+/** 转换为十进制颜色分量。 */
+const toDecByte = (value: number): string => toByte(value).toString(10);
+
+/** CSS HEX：RRGGBB。 */
+const colorToCssHex = (color: vscode.Color): string =>
+  [toHexByte(color.red), toHexByte(color.green), toHexByte(color.blue)].join("");
+
+/** War3 HEX：AARRGGBB。 */
+const colorToWar3Hex = (color: vscode.Color): string =>
+  [
+    toHexByte(color.alpha),
+    toHexByte(color.red),
+    toHexByte(color.green),
+    toHexByte(color.blue),
+  ].join("");
+
+/** color(r, g, b, a)：分量均为 0~255。 */
+const colorToFourComponents = (color: vscode.Color): string =>
+  [
+    toDecByte(color.red),
+    toDecByte(color.green),
+    toDecByte(color.blue),
+    toDecByte(color.alpha),
+  ].join(", ");
+
+/** color(r, g, b) / rgb(r, g, b)。 */
+const colorToThreeComponents = (color: vscode.Color): string =>
+  [toDecByte(color.red), toDecByte(color.green), toDecByte(color.blue)].join(", ");
+
+/**
+ * 解析颜色分量：
+ * - 0xFF / 0XFF：十六进制
+ * - 255：纯数字按十进制
+ * - 其他（如无前缀的 FF）：视为无效，返回 undefined
+ *
+ * 注意：无 0x 前缀的十六进制写法不支持，
+ * 因为「10 是十进制字符串还是十六进制」存在歧义。
+ */
+export const parseComponent = (raw: string): number | undefined => {
+  const value = raw.trim();
+
+  if (/^0[xX][0-9a-fA-F]+$/.test(value)) {
+    const result = Number.parseInt(value.slice(2), 16);
+    return Number.isFinite(result) ? result : undefined;
   }
-  if (base) {
-    if (base == 16) {
-      return Number.parseInt("0x" +str)
-    }else{
-      Number.parseInt(str)
-    }
-  }else{
-    if (Number.parseInt(str).toString()==str) {
-      return Number.parseInt(str)
-    }
-    if (str.match(new RegExp(/\[0-9a-fA-F]{2}/, "g"))) {
-      return Number.parseInt("0x" +str)
-    }
+
+  if (/^[0-9]+$/.test(value)) {
+    const result = Number.parseInt(value, 10);
+    return Number.isFinite(result) ? result : undefined;
   }
-  return Number.parseInt(str)
+
+  return undefined;
 };
 
-const getFuncName = (document: vscode.TextDocument, range: vscode.Range) => {
-  let name = document.getText(range);
-  return name.substring(0, name.indexOf('(')) 
-}
+/** 将 0~255 的颜色分量转换成 VS Code 使用的 0~1。 */
+const componentToUnit = (raw: string): number | undefined => {
+  const value = parseComponent(raw);
+  if (value === undefined) {
+    return undefined;
+  }
 
-class HexDocumentColorProvider implements vscode.DocumentColorProvider {
-  /// 颜色改变到文档
-  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
-    let lineCount = document.lineCount;
-    let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/\|[cC][0-9a-fA-F]{8}/, "g");
-    for (let i = 0; i < lineCount; i++) {
-      let lineText = document.lineAt(i).text;
-      let colotSet = lineText.match(colorReg);
-      let posstion = 0;
-      if (colotSet) {
-        colotSet.forEach(x => {
-          posstion = lineText.indexOf(x, posstion);
-          let range = new vscode.Range(i, posstion, i, posstion + x.length);
-          let a = numberFormat( lineText.substring(posstion + 2, posstion + 2 + 2),16) / 255;
-          let r = numberFormat( lineText.substring(posstion + 4, posstion + 4 + 2),16) / 255;
-          let g = numberFormat( lineText.substring(posstion + 6, posstion + 6 + 2),16) / 255;
-          let b = numberFormat( lineText.substring(posstion + 8, posstion + 8 + 2),16) / 255;
-          colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
-          posstion += x.length;
-        });
+  return clamp(value, 0, 255) / 255;
+};
+
+/** 解析 0~1 的 alpha。 */
+const parseUnitAlpha = (raw: string): number | undefined => {
+  const value = Number.parseFloat(raw);
+
+  if (!Number.isFinite(value)) {
+    return undefined;
+  }
+
+  return clamp(value, 0, 1);
+};
+
+/** 从颜色表达式中取得函数名，保留原来的大小写。 */
+const getFunctionName = (text: string): string => {
+  const index = text.indexOf("(");
+  return index >= 0 ? text.slice(0, index) : text;
+};
+
+/**
+ * 逐行匹配文档。
+ *
+ * 使用 exec() 的 match.index 计算准确位置，
+ * 不再使用 indexOf() 搜索重复字符串的位置。
+ */
+const forEachMatch = (
+  document: vscode.TextDocument,
+  regex: RegExp,
+  callback: (match: RegExpExecArray, line: number) => boolean | void,
+): void => {
+  const flags = regex.flags.includes("g") ? regex.flags : `${regex.flags}g`;
+
+  // 每次调用创建独立正则，避免 lastIndex 在多次调用间残留。
+  const re = new RegExp(regex.source, flags);
+
+  for (let line = 0; line < document.lineCount; line++) {
+    const lineText = document.lineAt(line).text;
+
+    re.lastIndex = 0;
+
+    let match: RegExpExecArray | null;
+
+    while ((match = re.exec(lineText)) !== null) {
+      if (callback(match, line) === false) {
+        return;
+      }
+
+      // 防止意外出现零宽匹配导致死循环。
+      if (match[0].length === 0) {
+        re.lastIndex++;
       }
     }
-    return colors;
   }
-  /// 文档改变到颜色
-  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let document = context.document;
-    let range = context.range;
-    let documentText = document.getText(range);
-    return [new vscode.ColorPresentation(`${
-      documentText.substring(0, 2)
-      }${
-      color2JColorCode(new vscode.Color(r, g, b, a))
-      }${
-      documentText.substring(10)
-      }`)];
+};
 
-  }
-}
+/** 创建颜色信息。 */
+const createColorInformation = (
+  line: number,
+  start: number,
+  length: number,
+  color: vscode.Color,
+): vscode.ColorInformation => {
+  const range = new vscode.Range(line, start, line, start + length);
 
+  return new vscode.ColorInformation(range, color);
+};
 
-class CssDocumentColorProvider implements vscode.DocumentColorProvider {
-  /// 颜色改变到文档
-  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
-    let lineCount = document.lineCount;
-    let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/#[\da-fA-F]{6}/, "g");
-    for (let i = 0; i < lineCount; i++) {
-      let lineText = document.lineAt(i).text;
-      let colotSet = lineText.match(colorReg);
-      let posstion = 0;
-      if (colotSet) {
-        colotSet.forEach(x => {
-          posstion = lineText.indexOf(x, posstion);
-          let range = new vscode.Range(i, posstion, i, posstion + x.length);
-          let a = 255 / 255;
-          let r = numberFormat( lineText.substring(posstion + 1, posstion + 1 + 2),16) / 255;
-          let g = numberFormat( lineText.substring(posstion + 3, posstion + 3 + 2),16) / 255;
-          let b = numberFormat( lineText.substring(posstion + 5, posstion + 5 + 2),16) / 255;
-          colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
-          posstion += x.length;
-        });
+// ============================================================
+// War3 颜色：|cAARRGGBB
+// ============================================================
+
+const WAR3_HEX_REGEX = /\|[cC]([0-9a-fA-F]{8})/g;
+
+export class HexDocumentColorProvider implements vscode.DocumentColorProvider {
+  provideDocumentColors(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+    const colors: vscode.ColorInformation[] = [];
+
+    forEachMatch(document, WAR3_HEX_REGEX, (match, line) => {
+      if (token.isCancellationRequested) {
+        return false;
       }
-    }
-    return colors;
+
+      const hex = match[1];
+
+      const alpha = Number.parseInt(hex.slice(0, 2), 16) / 255;
+      const red = Number.parseInt(hex.slice(2, 4), 16) / 255;
+      const green = Number.parseInt(hex.slice(4, 6), 16) / 255;
+      const blue = Number.parseInt(hex.slice(6, 8), 16) / 255;
+
+      const color = new vscode.Color(red, green, blue, alpha);
+
+      colors.push(createColorInformation(line, match.index, match[0].length, color));
+    });
+
+    return token.isCancellationRequested ? [] : colors;
   }
-  /// 文档改变到颜色
-  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    return [new vscode.ColorPresentation(`#${
-      color2CssColorCode(new vscode.Color(r, g, b, a))
-    }`)]
+
+  provideColorPresentations(
+    color: vscode.Color,
+    context: {
+      document: vscode.TextDocument;
+      range: vscode.Range;
+    },
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    if (token.isCancellationRequested) {
+      return [];
+    }
+
+    const originalText = context.document.getText(context.range);
+
+    // 把 |cAARRGGBB 拆成「前缀 + hex + 后缀」，
+    // 只替换中间 8 位 hex，前后原样保留。
+    const matched = originalText.match(/^(\|[cC])([0-9a-fA-F]{8})([\s\S]*)$/);
+
+    const result = matched ? `${matched[1]}${colorToWar3Hex(color)}${matched[3]}` : originalText;
+
+    return [new vscode.ColorPresentation(result)];
   }
 }
 
+// ============================================================
+// CSS HEX：#RGB / #RGBA / #RRGGBB / #RRGGBBAA
+// ============================================================
 
-class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
-  /// 颜色改变到文档
-  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
-    let lineCount = document.lineCount;
-    let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[cC]olor\( *\w+( *, *\w+ *){3}\)/, "g");
-    for (let i = 0; i < lineCount; i++) {
-      let lineText = document.lineAt(i).text;
-      let colotSet = lineText.match(colorReg);
-      let posstion = 0;
-      if (colotSet) {
-        colotSet.forEach(x => {
-          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\w+) */));
-          if (nums) {
-            posstion = lineText.indexOf(x, posstion);
-            let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums[1]) / 255;
-            let g = numberFormat(nums[2]) / 255;
-            let b = numberFormat(nums[3]) / 255;
-            let a = numberFormat(nums[4]) / 255;
-            
-            colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
-            posstion += x.length;
-          }
-        });
+/**
+ * # 后紧跟合法 hex，且 # 前一个字符不是 hex 字符（lookbehind）。
+ * 用 lookbehind 取代前置捕获组，避免消费前置字符，
+ * 同时放宽对 x#FFF 这类（x 非 hex）的识别。
+ */
+const CSS_HEX_REGEX =
+  /(?<![0-9a-fA-F])#([0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g;
+
+export class CssDocumentColorProvider implements vscode.DocumentColorProvider {
+  provideDocumentColors(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+    const colors: vscode.ColorInformation[] = [];
+
+    forEachMatch(document, CSS_HEX_REGEX, (match, line) => {
+      if (token.isCancellationRequested) {
+        return false;
       }
-    }
-    return colors;
-  }
-  /// 文档改变到颜色
-  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let name = getFuncName(context.document, context.range);
-    return [new vscode.ColorPresentation(name+`(${
-        color2ColorClassColorCode(new vscode.Color(r, g, b, a))
-      })`)];
 
+      const hex = match[1];
+
+      let red: number;
+      let green: number;
+      let blue: number;
+      let alpha = 1;
+
+      if (hex.length === 3 || hex.length === 4) {
+        red = Number.parseInt(hex[0] + hex[0], 16) / 255;
+        green = Number.parseInt(hex[1] + hex[1], 16) / 255;
+        blue = Number.parseInt(hex[2] + hex[2], 16) / 255;
+
+        if (hex.length === 4) {
+          alpha = Number.parseInt(hex[3] + hex[3], 16) / 255;
+        }
+      } else {
+        red = Number.parseInt(hex.slice(0, 2), 16) / 255;
+        green = Number.parseInt(hex.slice(2, 4), 16) / 255;
+        blue = Number.parseInt(hex.slice(4, 6), 16) / 255;
+
+        if (hex.length === 8) {
+          alpha = Number.parseInt(hex.slice(6, 8), 16) / 255;
+        }
+      }
+
+      colors.push(
+        createColorInformation(
+          line,
+          match.index,
+          match[0].length,
+          new vscode.Color(red, green, blue, alpha),
+        ),
+      );
+    });
+
+    return token.isCancellationRequested ? [] : colors;
+  }
+
+  provideColorPresentations(
+    color: vscode.Color,
+    context: {
+      document: vscode.TextDocument;
+      range: vscode.Range;
+    },
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    if (token.isCancellationRequested) {
+      return [];
+    }
+
+    const originalText = context.document.getText(context.range);
+    const originalHex = originalText.startsWith("#") ? originalText.slice(1) : "";
+
+    // 原来有 alpha 的格式，编辑后也必须保留 alpha。
+    const hasAlpha = originalHex.length === 4 || originalHex.length === 8;
+
+    const hex = colorToCssHex(color);
+
+    const result = hasAlpha ? `#${hex}${toHexByte(color.alpha)}` : `#${hex}`;
+
+    return [new vscode.ColorPresentation(result)];
   }
 }
+
+// ============================================================
+// color(r, g, b, a)
+// 四个分量均为 0~255，支持十进制和十六进制分量
+// ============================================================
+
+const COLOR4_REGEX =
+  /\bcolor\(\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*\)/gi;
+
+export class ColorDocumentColorProvider implements vscode.DocumentColorProvider {
+  provideDocumentColors(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+    const colors: vscode.ColorInformation[] = [];
+
+    forEachMatch(document, COLOR4_REGEX, (match, line) => {
+      if (token.isCancellationRequested) {
+        return false;
+      }
+
+      const red = componentToUnit(match[1]);
+      const green = componentToUnit(match[2]);
+      const blue = componentToUnit(match[3]);
+      const alpha = componentToUnit(match[4]);
+
+      if (red === undefined || green === undefined || blue === undefined || alpha === undefined) {
+        return;
+      }
+
+      colors.push(
+        createColorInformation(
+          line,
+          match.index,
+          match[0].length,
+          new vscode.Color(red, green, blue, alpha),
+        ),
+      );
+    });
+
+    return token.isCancellationRequested ? [] : colors;
+  }
+
+  provideColorPresentations(
+    color: vscode.Color,
+    context: {
+      document: vscode.TextDocument;
+      range: vscode.Range;
+    },
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    if (token.isCancellationRequested) {
+      return [];
+    }
+
+    const originalText = context.document.getText(context.range);
+    const functionName = getFunctionName(originalText);
+
+    return [new vscode.ColorPresentation(`${functionName}(${colorToFourComponents(color)})`)];
+  }
+}
+
+// ============================================================
+// color(r, g, b)
+// 三个分量均为 0~255
+// ============================================================
+
+const COLOR3_REGEX =
+  /\bcolor\(\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*\)/gi;
 
 class Color3DocumentColorProvider implements vscode.DocumentColorProvider {
-  /// 颜色改变到文档
-  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
-    let lineCount = document.lineCount;
-    let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[cC]olor\( *[0-9A-Fa-fxX]+( *, *[0-9A-Fa-fxX]+ *){2}\)/, "g");
-    for (let i = 0; i < lineCount; i++) {
-      let lineText = document.lineAt(i).text;
-      let colotSet = lineText.match(colorReg);
-      let posstion = 0;
-      if (colotSet) {
-        colotSet.forEach(x => {
-          let nums = x.match(new RegExp(/ *([0-9A-Fa-fxX]+) *, *([0-9A-Fa-fxX]+) *, *([0-9A-Fa-fxX]+) */));
-          if(nums)
-          {
-            posstion = lineText.indexOf(x, posstion);
-            let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums[1]) / 255;
-            let g = numberFormat(nums[2]) / 255;
-            let b = numberFormat(nums[3]) / 255;
-            let a = 1;
-            colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
-            posstion += x.length;
-          }
-        });
+  provideDocumentColors(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+    const colors: vscode.ColorInformation[] = [];
+
+    forEachMatch(document, COLOR3_REGEX, (match, line) => {
+      if (token.isCancellationRequested) {
+        return false;
       }
-    }
-    return colors;
+
+      const red = componentToUnit(match[1]);
+      const green = componentToUnit(match[2]);
+      const blue = componentToUnit(match[3]);
+
+      if (red === undefined || green === undefined || blue === undefined) {
+        return;
+      }
+
+      colors.push(
+        createColorInformation(
+          line,
+          match.index,
+          match[0].length,
+          new vscode.Color(red, green, blue, 1),
+        ),
+      );
+    });
+
+    return token.isCancellationRequested ? [] : colors;
   }
-  /// 文档改变到颜色
-  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let name = getFuncName(context.document, context.range);
-    return [new vscode.ColorPresentation(name + `(${
-        color2Color3ClassColorCode(new vscode.Color(r, g, b, a))
-      })`)];
+
+  provideColorPresentations(
+    color: vscode.Color,
+    context: {
+      document: vscode.TextDocument;
+      range: vscode.Range;
+    },
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    if (token.isCancellationRequested) {
+      return [];
+    }
+
+    const originalText = context.document.getText(context.range);
+    const functionName = getFunctionName(originalText);
+
+    return [new vscode.ColorPresentation(`${functionName}(${colorToThreeComponents(color)})`)];
   }
 }
+
+// ============================================================
+// rgba(r, g, b, a)
+// RGB 分量为 0~255，alpha 为 0~1
+// ============================================================
+
+const RGBA_REGEX =
+  /\brgba\(\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*((?:\d+(?:\.\d*)?|\.\d+))\s*\)/gi;
 
 class RGBADocumentColorProvider implements vscode.DocumentColorProvider {
-  /// 颜色改变到文档
-  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
-    let lineCount = document.lineCount;
-    let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[rR][gG][bB][aA]\( *\w+( *, *\w+ *){2} *, *\d*\.?\d* *\)/, "g");
-    for (let i = 0; i < lineCount; i++) {
-      let lineText = document.lineAt(i).text;
-      let colotSet = lineText.match(colorReg);
-      let posstion = 0;
-      if (colotSet) {
-        colotSet.forEach(x => {
-          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) *, *(\d*\.?\d*) */));
-          if (nums) {
-            posstion = lineText.indexOf(x, posstion);
-            let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums[1]) / 255;
-            let g = numberFormat(nums[2]) / 255;
-            let b = numberFormat(nums[3]) / 255;
-            let a = Number.parseFloat(nums[4]) ;
-            
-            colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, a)));
-            posstion += x.length;
-          }
-        });
-      }
-    }
-    return colors;
-  }
-  /// 文档改变到颜色
-  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let name = getFuncName(context.document, context.range);
-    return [new vscode.ColorPresentation(name+`(${
-      color2Color3ClassColorCode(new vscode.Color(r, g, b, 1)) + ', ' + a.toFixed(2)
-      })`)];
+  provideDocumentColors(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+    const colors: vscode.ColorInformation[] = [];
 
+    forEachMatch(document, RGBA_REGEX, (match, line) => {
+      if (token.isCancellationRequested) {
+        return false;
+      }
+
+      const red = componentToUnit(match[1]);
+      const green = componentToUnit(match[2]);
+      const blue = componentToUnit(match[3]);
+      const alpha = parseUnitAlpha(match[4]);
+
+      if (red === undefined || green === undefined || blue === undefined || alpha === undefined) {
+        return;
+      }
+
+      colors.push(
+        createColorInformation(
+          line,
+          match.index,
+          match[0].length,
+          new vscode.Color(red, green, blue, alpha),
+        ),
+      );
+    });
+
+    return token.isCancellationRequested ? [] : colors;
+  }
+
+  provideColorPresentations(
+    color: vscode.Color,
+    context: {
+      document: vscode.TextDocument;
+      range: vscode.Range;
+    },
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    if (token.isCancellationRequested) {
+      return [];
+    }
+
+    const originalText = context.document.getText(context.range);
+    const functionName = getFunctionName(originalText);
+
+    return [
+      new vscode.ColorPresentation(
+        `${functionName}(${colorToThreeComponents(color)}, ${clamp(color.alpha, 0, 1).toFixed(2)})`,
+      ),
+    ];
   }
 }
 
+// ============================================================
+// rgb(r, g, b)
+// RGB 分量为 0~255
+// ============================================================
+
+const RGB_REGEX =
+  /\brgb\(\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*,\s*(0[xX][0-9a-fA-F]+|[0-9a-fA-F]+)\s*\)/gi;
 
 class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
-  /// 颜色改变到文档
-  provideDocumentColors(document: vscode.TextDocument, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorInformation[]> {
-    let lineCount = document.lineCount;
-    let colors = new Array<vscode.ColorInformation>();
-    let colorReg = new RegExp(/[rR][gG][bB]\( *\w+( *, *\w+ *){2}\)/, "g");
-    for (let i = 0; i < lineCount; i++) {
-      let lineText = document.lineAt(i).text;
-      let colotSet = lineText.match(colorReg);
-      let posstion = 0;
-      if (colotSet) {
-        colotSet.forEach(x => {
-          let nums = x.match(new RegExp(/ *(\w+) *, *(\w+) *, *(\w+) */));
-          if (nums) {
-            posstion = lineText.indexOf(x, posstion);
-            let range = new vscode.Range(i, posstion, i, posstion + x.length);
-            let r = numberFormat(nums[1]) / 255;
-            let g = numberFormat(nums[2]) / 255;
-            let b = numberFormat(nums[3]) / 255;
-            
-            colors.push(new vscode.ColorInformation(range, new vscode.Color(r, g, b, 1)));
-            posstion += x.length;
-          }
-        });
-      }
-    }
-    return colors;
-  }
-  /// 文档改变到颜色
-  provideColorPresentations(color: vscode.Color, context: { document: vscode.TextDocument; range: vscode.Range; }, token: vscode.CancellationToken): vscode.ProviderResult<vscode.ColorPresentation[]> {
-    let r = color.red;
-    let g = color.green;
-    let b = color.blue;
-    let a = color.alpha;
-    let name = getFuncName(context.document, context.range);
-    return [new vscode.ColorPresentation(name+`(${
-      color2Color3ClassColorCode(new vscode.Color(r, g, b, 1))
-      })`)];
+  provideDocumentColors(
+    document: vscode.TextDocument,
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorInformation[]> {
+    const colors: vscode.ColorInformation[] = [];
 
+    forEachMatch(document, RGB_REGEX, (match, line) => {
+      if (token.isCancellationRequested) {
+        return false;
+      }
+
+      const red = componentToUnit(match[1]);
+      const green = componentToUnit(match[2]);
+      const blue = componentToUnit(match[3]);
+
+      if (red === undefined || green === undefined || blue === undefined) {
+        return;
+      }
+
+      colors.push(
+        createColorInformation(
+          line,
+          match.index,
+          match[0].length,
+          new vscode.Color(red, green, blue, 1),
+        ),
+      );
+    });
+
+    return token.isCancellationRequested ? [] : colors;
+  }
+
+  provideColorPresentations(
+    color: vscode.Color,
+    context: {
+      document: vscode.TextDocument;
+      range: vscode.Range;
+    },
+    token: vscode.CancellationToken,
+  ): vscode.ProviderResult<vscode.ColorPresentation[]> {
+    if (token.isCancellationRequested) {
+      return [];
+    }
+
+    const originalText = context.document.getText(context.range);
+    const functionName = getFunctionName(originalText);
+
+    return [new vscode.ColorPresentation(`${functionName}(${colorToThreeComponents(color)})`)];
   }
 }
 
-const hexSupportLanguages = ["jass","lua","ini","vjass","zinc","fdf","json",'js',"javascript","typescript"];
-const colorSupportLanguages = ["jass","lua","vjass","zinc",'js',"javascript","typescript"];
-const cssSupportLanguages = ["css","html","xml","json",'js',"javascript","typescript","lua","ini"];
-const rgbaSupportLanguages = ["css","html",'js',"javascript","typescript"];
+// ============================================================
+// 注册 Provider
+// ============================================================
 
-hexSupportLanguages.forEach(language=>{
-  vscode.languages.registerColorProvider(language, new HexDocumentColorProvider);
-});
-colorSupportLanguages.forEach(language=>{
-  vscode.languages.registerColorProvider(language, new ColorDocumentColorProvider);
-  vscode.languages.registerColorProvider(language, new Color3DocumentColorProvider);
-});
-cssSupportLanguages.forEach(language=>{
-  vscode.languages.registerColorProvider(language, new CssDocumentColorProvider);
-});
-rgbaSupportLanguages.forEach(language=>{
-  vscode.languages.registerColorProvider(language, new RGBADocumentColorProvider);
-  vscode.languages.registerColorProvider(language, new RGBDocumentColorProvider);
-});
+/**
+ * 需要在 extension.ts 的 activate(context) 中调用。
+ *
+ * 所有注册返回的 Disposable 都加入 context.subscriptions，
+ * 扩展停用或重新加载时 VS Code 会自动清理。
+ */
+export function registerColorProviders(context: vscode.ExtensionContext): void {
+  // War3 HEX：|cAARRGGBB
+  const war3HexLanguages = [
+    "jass",
+    "lua",
+    "ini",
+    "vjass",
+    "zinc",
+    "fdf",
+    "json",
+    "js",
+    "javascript",
+    "typescript",
+  ];
+
+  // color(r, g, b) / color(r, g, b, a)
+  const colorFunctionLanguages = ["jass", "lua", "vjass", "zinc", "js", "javascript", "typescript"];
+
+  /**
+   * 自定义 #HEX 识别：
+   * CSS/HTML 的标准语法由 VS Code 原生语言服务处理；
+   * JSON 保留自定义识别，以覆盖普通字符串中的 HEX 值；
+   * JS/TS、XML、Lua、INI 等也保留自定义识别。
+   */
+  const hashHexLanguages = ["lua", "ini", "js", "javascript", "typescript", "xml", "json"];
+
+  // rgb()/rgba()：仅在需要自定义识别的语言中注册。
+  const rgbFunctionLanguages = ["js", "javascript", "typescript"];
+
+  const register = (languages: readonly string[], provider: vscode.DocumentColorProvider): void => {
+    for (const language of languages) {
+      context.subscriptions.push(vscode.languages.registerColorProvider(language, provider));
+    }
+  };
+
+  register(war3HexLanguages, new HexDocumentColorProvider());
+
+  register(colorFunctionLanguages, new ColorDocumentColorProvider());
+
+  register(colorFunctionLanguages, new Color3DocumentColorProvider());
+
+  register(hashHexLanguages, new CssDocumentColorProvider());
+
+  register(rgbFunctionLanguages, new RGBADocumentColorProvider());
+
+  register(rgbFunctionLanguages, new RGBDocumentColorProvider());
+}
