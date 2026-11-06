@@ -148,7 +148,7 @@ const createColorInformation = (
 // War3 颜色：|cAARRGGBB
 // ============================================================
 
-const WAR3_HEX_REGEX = /\|[cC]([0-9a-fA-F]{8})(?![0-9a-fA-F])/g;
+const WAR3_HEX_REGEX = /\|[cC]([0-9a-fA-F]{8})/g;
 
 export class HexDocumentColorProvider implements vscode.DocumentColorProvider {
   provideDocumentColors(

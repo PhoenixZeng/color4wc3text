@@ -31,11 +31,12 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "pretest": "npm run compile",
+    "pretest": "npm run compile && npm run lint",
     "test": "vscode-test",
     "publish": "vsce publish",
     "pubpatch": "vsce publish patch",
-    "package": "vsce package"
+    "package": "vsce package",
+    "lint": "oxlint src"
   },
   "devDependencies": {
     "@types/mocha": "^10.0.10",
@@ -66,5 +67,10 @@
   "markdown": "github",
   "engines": {
     "vscode": "^1.137.0"
+  },
+  "overrides": {
+    "mocha": "^12.0.3",
+    "glob": "^14.0.4",
+    "minimatch": "^11.0.5"
   }
 }

@@ -20,7 +20,7 @@ const fakeToken = { isCancellationRequested: false } as vscode.CancellationToken
 const fakeDocument = (text: string): vscode.TextDocument =>
   ({
     lineCount: 1,
-    lineAt: (_: number) => ({ text }),
+    lineAt: () => ({ text }),
   }) as unknown as vscode.TextDocument;
 
 /**
@@ -68,6 +68,18 @@ suite("Color Providers", () => {
       assert.strictEqual(Math.round(c.red * 255), 0xff);
       assert.strictEqual(Math.round(c.green * 255), 0xe7);
       assert.strictEqual(Math.round(c.blue * 255), 0xae);
+    });
+
+    test("颜色代码后可直接跟随十六进制字符开头的正文", async () => {
+      for (const text of ["|cFFFF0000Attack|r", "|cFFFF0000123|r"]) {
+        const colors = await colorsOf(provider, text);
+        assert.strictEqual(colors.length, 1);
+        const info = firstOrFail(colors, "expected one color");
+        assert.strictEqual(info.range.end.character, 10);
+        assert.strictEqual(info.color.red, 1);
+        assert.strictEqual(info.color.green, 0);
+        assert.strictEqual(info.color.blue, 0);
+      }
     });
 
     test("回写保留 |r 后缀", async () => {
