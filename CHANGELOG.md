@@ -4,7 +4,7 @@ All notable changes to the "color4wc3text" extension will be documented in this 
 
 Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [1.0.0重构]
+## [0.2.0] - 2026-11-06
 
 ### Added (新增)
 - **共用面板预览（试用）**：仅在颜色头／色块处与原生选色器共用 Hover；移除选区自动弹出和正文独立面板，压缩布局减少占用。
