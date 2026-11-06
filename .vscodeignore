@@ -8,3 +8,9 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+
+.vscode-test.mjs
+out/main/constant.js
+out/main/document-color-provider.js
+out/main/test.js
+out/main/util.js
