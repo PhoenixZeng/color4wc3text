@@ -7,10 +7,13 @@ Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how
 ## [1.0.0重构]
 
 ### Added (新增)
+- **共用面板预览（试用）**：仅在颜色头／色块处与原生选色器共用 Hover；移除选区自动弹出和正文独立面板，压缩布局减少占用。
+- **语言边界**：按 Lua、JASS 系列、INI/LNI、XML、JSON、JS/TS、FDF 语法确定正文，支持长字符串并排除注释及不明确范围；新增 `.lni` 语言关联。
+- **颜色规范化**：预览内操作可为颜色段补齐 `|r`，不推断嵌套关系；支持一次撤销。
 - **XML 支持**：XML 文档支持 War3 `|cAARRGGBB` 颜色识别与编辑。
 - **回写配置**：新增 `color4wc3text.floatPrecision`（默认 3 位，四舍五入且不补尾零）和 `color4wc3text.hexCase`（大写／小写／自动，默认自动）。
 - **CSS HEX 支持扩展**：现在支持 `#RGB`、`#RGBA`、`#RRGGBB`、`#RRGGBBAA` 四种格式。
-- **自动化测试体系**：引入 `@vscode/test-cli` 与 Mocha，编写了 21 个用例覆盖颜色匹配、解析与回写逻辑。
+- **自动化测试体系**：引入 `@vscode/test-cli` 与 Mocha，编写了自动化用例覆盖颜色匹配、解析与回写逻辑。
 
 ### Changed (变更)
 - **最低版本**：VS Code 最低要求提高到 1.137.0。
@@ -20,6 +23,7 @@ Check [Keep a Changelog](https://keepachangelog.com/) for recommendations on how
 - **Provider 注册范围优化**：移除了对 `html` 和 `css` 的自定义颜色识别，避免与 VS Code 原生功能冲突。
 
 ### Fixed (修复)
+- **预览转义**：按语言解码字符串与 XML 实体，保留长字符串和 CDATA 原文，修正引号显示为实体文本的问题；标准化入口移至底部独立操作行。
 - **War3 正文边界**：颜色代码后紧跟 A–F 或数字开头的正文时仍可识别，编辑范围保持为前 10 个字符。
 - **开发依赖安全**：保留 npm 锁文件，整合依赖安全升级并移除旧测试工具链。
 - **后缀保留问题**：修复了修改 War3 颜色时，硬编码截取可能误吞 `|r` 等后缀文本的隐患。

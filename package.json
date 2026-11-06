@@ -82,7 +82,18 @@
           "description": "RGBA 透明度回写的小数精度。按指定小数位数四舍五入并移除末尾无意义的 0；默认 3 位，例如 0.1236 → 0.124、0.0004 → 0、0.4 → 0.4。"
         }
       }
-    }
+    },
+    "languages": [
+      {
+        "id": "lni",
+        "aliases": [
+          "LNI"
+        ],
+        "extensions": [
+          ".lni"
+        ]
+      }
+    ]
   },
   "activationEvents": [
     "onLanguage:css",
@@ -96,7 +107,8 @@
     "onLanguage:typescript",
     "onLanguage:vjass",
     "onLanguage:xml",
-    "onLanguage:zinc"
+    "onLanguage:zinc",
+    "onLanguage:lni"
   ],
   "icon": "resource/icon.png",
   "markdown": "github",

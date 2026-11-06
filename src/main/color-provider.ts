@@ -552,6 +552,21 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
 // 注册 Provider
 // ============================================================
 
+export const war3HexLanguages = [
+  "jass",
+  "lua",
+  "ini",
+  "lni",
+  "vjass",
+  "zinc",
+  "fdf",
+  "xml",
+  "json",
+  "js",
+  "javascript",
+  "typescript",
+];
+
 /**
  * 需要在 extension.ts 的 activate(context) 中调用。
  *
@@ -559,21 +574,6 @@ class RGBDocumentColorProvider implements vscode.DocumentColorProvider {
  * 扩展停用或重新加载时 VS Code 会自动清理。
  */
 export function registerColorProviders(context: vscode.ExtensionContext): void {
-  // War3 HEX：|cAARRGGBB
-  const war3HexLanguages = [
-    "jass",
-    "lua",
-    "ini",
-    "vjass",
-    "zinc",
-    "fdf",
-    "xml",
-    "json",
-    "js",
-    "javascript",
-    "typescript",
-  ];
-
   // color(r, g, b) / color(r, g, b, a)
   const colorFunctionLanguages = ["jass", "lua", "vjass", "zinc", "js", "javascript", "typescript"];
 
